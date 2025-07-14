@@ -11,7 +11,7 @@ endif
 WINDRES = windres
 
 execname = lakesnes.wasm
-sdlflags += -lm -Wl,--allow-undefined -Wl,--export-table -Wl,--export=malloc
+sdlflags += -lm -Wl,--export-table -Wl,--export=malloc
 
 appname = LakeSnes.app
 appexecname = lakesnes_app
