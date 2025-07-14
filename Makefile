@@ -1,11 +1,17 @@
-
-CC = clang
-CFLAGS = -O3 -I ./snes -I ./zip
+CC = clang --target=wasm32 --sysroot=../../wasmlite/libc -nodefaultlibs
+CFLAGS = -I ./snes -std=c99 -Wall # -Wextra -Wpedantic
+ifeq ($(DEBUG),0)
+CFLAGS += -Oz -ffast-math -flto
+sdlflags = -lc
+else
+CFLAGS += -g
+sdlflags = -lc-dbg
+endif
 
 WINDRES = windres
 
-execname = lakesnes
-sdlflags = `sdl2-config --cflags --libs`
+execname = lakesnes.wasm
+sdlflags += -lm -Wl,--allow-undefined -Wl,--export-table -Wl,--export=malloc
 
 appname = LakeSnes.app
 appexecname = lakesnes_app
@@ -14,9 +20,9 @@ appsdlflags = -framework SDL2 -F sdl2 -rpath @executable_path/../Frameworks
 winexecname = lakesnes.exe
 
 cfiles = snes/spc.c snes/dsp.c snes/apu.c snes/cpu.c snes/dma.c snes/ppu.c snes/cart.c snes/cx4.c snes/input.c snes/statehandler.c snes/snes.c snes/snes_other.c \
- zip/zip.c tracing.c main.c
+ tracing.c main.c
 hfiles = snes/spc.h snes/dsp.h snes/apu.h snes/cpu.h snes/dma.h snes/ppu.h snes/cart.h snes/cx4.h snes/input.h snes/statehandler.h snes/snes.h \
- zip/zip.h zip/miniz.h tracing.h
+ tracing.h
 
 .PHONY: all clean
 
@@ -24,6 +30,11 @@ all: $(execname)
 
 $(execname): $(cfiles) $(hfiles)
 	$(CC) $(CFLAGS) -o $@ $(cfiles) $(sdlflags)
+ifeq ($(DEBUG),0)
+	wasm-strip $@ && wasm-opt $@ -o $@ -Oz --enable-sign-ext
+else
+	../../emscripten/tools/wasm-sourcemap.py $@ -w $@ -p $(CURDIR) -s -u $@.map -o $@.map --dwarfdump=/usr/bin/llvm-dwarfdump
+endif
 
 $(appexecname): $(cfiles) $(hfiles)
 	$(CC) $(CFLAGS) -o $@ $(cfiles) $(appsdlflags) -D SDL2SUBDIR
@@ -46,3 +57,6 @@ $(winexecname): $(cfiles) $(hfiles)
 clean:
 	rm -f $(execname) $(appexecname) $(winexecname) win.res
 	rm -rf $(appname)
+
+serve:
+	python3 -m http.server

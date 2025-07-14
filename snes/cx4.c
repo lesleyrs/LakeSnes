@@ -166,7 +166,7 @@ void cx4_init(void *mem)
 		hash += cx4.rom[i];
 	}
 	if (hash != 0x169c91535) {
-		printf("CX4 rom generation failed (bad hash, %I64x)\n", hash);
+		printf("CX4 rom generation failed (bad hash, %llx)\n", hash);
 	}
 }
 
@@ -224,7 +224,9 @@ static void populate_cache(uint32_t address)
 	cx4.prg_cache[cx4.prg_cache_page] = address;
 
 	for (int i = 0; i < CACHE_PAGE; i++) {
-		cx4.prg[cx4.prg_cache_page][i] = (snes_read(cx4.snes, address++) << 0) | (snes_read(cx4.snes, address++) << 8);
+		uint8_t a = snes_read(cx4.snes, address++);
+		uint8_t b = snes_read(cx4.snes, address++);
+		cx4.prg[cx4.prg_cache_page][i] = (a << 0) | (b << 8);
 	}
 
 	cx4.prg_cache_timer += ((cx4.waitstate & 0x07) * CACHE_PAGE) * 2;
