@@ -68,8 +68,7 @@ static struct {
   char* statePath;
 } glb = {};
 
-static bool onkeydown(void *user_data, int key, int code, int modifiers);
-static bool onkeyup(void *user_data, int key, int code, int modifiers);
+static bool onkey(void *user_data, bool pressed, int key, int code, int modifiers);
 static uint8_t* readFile(const char* name, int* length);
 static void loadRom(const char* path);
 static void closeRom(void);
@@ -104,8 +103,7 @@ int main(int argc, char** argv) {
 //   SDL_PauseAudioDevice(glb.audioDevice, 0);
   JS_createCanvas(WIDTH, HEIGHT);
   JS_setTitle("LakeSnes");
-  JS_addKeyDownEventListener(NULL, onkeydown);
-  JS_addKeyUpEventListener(NULL, onkeyup);
+  JS_addKeyEventListener(NULL, onkey);
 
   glb.pathSeparator = "/";
 
@@ -216,109 +214,103 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-static bool onkeydown(void *user_data, int key, int code, int modifiers) {
+static bool onkey(void *user_data, bool pressed, int key, int code, int modifiers) {
     (void)user_data,(void)modifiers;
 
-  switch(key) {
-    case 'r': snes_reset(glb.snes, false); break;
-    case 'e': snes_reset(glb.snes, true); break;
-    case 'o': runOne = true; break;
-    case 'p': paused = !paused; break;
-    case 't': turbo = true; break;
-    /* case 'j': {
-      char* filePath = malloc(strlen(glb.prefPath) + 9); // "dump.bin" (8) + '\0'
-      strcpy(filePath, glb.prefPath);
-      strcat(filePath, "dump.bin");
-      printf("Dumping to %s...\n", filePath);
-      FILE* f = fopen(filePath, "wb");
-      if(f == NULL) {
-        puts("Failed to open file for writing");
-        free(filePath);
-        break;
-      }
-      fwrite(glb.snes->ram, 0x20000, 1, f);
-      fwrite(glb.snes->ppu->vram, 0x10000, 1, f);
-      fwrite(glb.snes->ppu->cgram, 0x200, 1, f);
-      fwrite(glb.snes->ppu->oam, 0x200, 1, f);
-      fwrite(glb.snes->ppu->highOam, 0x20, 1, f);
-      fwrite(glb.snes->apu->ram, 0x10000, 1, f);
-      fclose(f);
-      free(filePath);
-      break;
-    } */
-    case 'l': {
-      // run one cpu cycle
-      snes_runCpuCycle(glb.snes);
-      char line[80];
-      getProcessorStateCpu(glb.snes, line);
-      puts(line);
-      break;
-    }
-    case 'k': {
-      // run one spc cycle
-      snes_runSpcCycle(glb.snes);
-      char line[57];
-      getProcessorStateSpc(glb.snes, line);
-      puts(line);
-      break;
-    }
-    /* case 'm': {
-      // save state
-      int size = snes_saveState(glb.snes, NULL);
-      uint8_t* stateData = malloc(size);
-      snes_saveState(glb.snes, stateData);
-      FILE* f = fopen(glb.statePath, "wb");
-      if(f != NULL) {
-        fwrite(stateData, size, 1, f);
-        fclose(f);
-        puts("Saved state");
-      } else {
-        puts("Failed to save state");
-      }
-      free(stateData);
-      break;
-    }
-    case 'n': {
-      // load state
-      int size = 0;
-      uint8_t* stateData = readFile(glb.statePath, &size);
-      if(stateData != NULL) {
-        if(snes_loadState(glb.snes, stateData, size)) {
-          puts("Loaded state");
-        } else {
-          puts("Failed to load state, file contents invalid");
+    if (pressed) {
+      switch(key) {
+        case 'r': snes_reset(glb.snes, false); break;
+        case 'e': snes_reset(glb.snes, true); break;
+        case 'o': runOne = true; break;
+        case 'p': paused = !paused; break;
+        case 't': turbo = true; break;
+        /* case 'j': {
+          char* filePath = malloc(strlen(glb.prefPath) + 9); // "dump.bin" (8) + '\0'
+          strcpy(filePath, glb.prefPath);
+          strcat(filePath, "dump.bin");
+          printf("Dumping to %s...\n", filePath);
+          FILE* f = fopen(filePath, "wb");
+          if(f == NULL) {
+            puts("Failed to open file for writing");
+            free(filePath);
+            break;
+          }
+          fwrite(glb.snes->ram, 0x20000, 1, f);
+          fwrite(glb.snes->ppu->vram, 0x10000, 1, f);
+          fwrite(glb.snes->ppu->cgram, 0x200, 1, f);
+          fwrite(glb.snes->ppu->oam, 0x200, 1, f);
+          fwrite(glb.snes->ppu->highOam, 0x20, 1, f);
+          fwrite(glb.snes->apu->ram, 0x10000, 1, f);
+          fclose(f);
+          free(filePath);
+          break;
+        } */
+        case 'l': {
+          // run one cpu cycle
+          snes_runCpuCycle(glb.snes);
+          char line[80];
+          getProcessorStateCpu(glb.snes, line);
+          puts(line);
+          break;
         }
-        free(stateData);
-      } else {
-        puts("Failed to load state, failed to read file");
+        case 'k': {
+          // run one spc cycle
+          snes_runSpcCycle(glb.snes);
+          char line[57];
+          getProcessorStateSpc(glb.snes, line);
+          puts(line);
+          break;
+        }
+        /* case 'm': {
+          // save state
+          int size = snes_saveState(glb.snes, NULL);
+          uint8_t* stateData = malloc(size);
+          snes_saveState(glb.snes, stateData);
+          FILE* f = fopen(glb.statePath, "wb");
+          if(f != NULL) {
+            fwrite(stateData, size, 1, f);
+            fclose(f);
+            puts("Saved state");
+          } else {
+            puts("Failed to save state");
+          }
+          free(stateData);
+          break;
+        }
+        case 'n': {
+          // load state
+          int size = 0;
+          uint8_t* stateData = readFile(glb.statePath, &size);
+          if(stateData != NULL) {
+            if(snes_loadState(glb.snes, stateData, size)) {
+              puts("Loaded state");
+            } else {
+              puts("Failed to load state, file contents invalid");
+            }
+            free(stateData);
+          } else {
+            puts("Failed to load state, failed to read file");
+          }
+          break;
+        } */
       }
-      break;
-    } */
-  }
-    // TODO
-    // if (code == DOM_PK_ENTER && modifiers & KMOD_ALT) {
-    //   fullscreenFlags ^= SDL_WINDOW_FULLSCREEN_DESKTOP;
-    //   SDL_SetWindowFullscreen(glb.window, fullscreenFlags);
-    // }
-    // break;
+        // TODO
+        // if (code == DOM_PK_ENTER && modifiers & KMOD_ALT) {
+        //   fullscreenFlags ^= SDL_WINDOW_FULLSCREEN_DESKTOP;
+        //   SDL_SetWindowFullscreen(glb.window, fullscreenFlags);
+        // }
+        // break;
     if((modifiers & (KMOD_ALT | KMOD_CTRL | KMOD_META)) == 0) {
       // only send keypress if not holding ctrl/alt/meta
       handleInput(key, code, true);
     }
 
-    if (code == DOM_PK_F5 || code == DOM_PK_F11 || code == DOM_PK_F12) {
-        return 0;
+    } else {
+      switch(key) {
+        case 't': turbo = false; break;
+      }
+      handleInput(key, code, false);
     }
-    return 1;
-}
-
-static bool onkeyup(void *user_data, int key, int code, int modifiers) {
-    (void)user_data,(void)modifiers;
-
-    switch(key) {
-      case 't': turbo = false; break;
-    }
-    handleInput(key, code, false);
 
     if (code == DOM_PK_F5 || code == DOM_PK_F11 || code == DOM_PK_F12) {
         return 0;
