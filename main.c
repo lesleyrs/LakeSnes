@@ -138,9 +138,9 @@ int main(int argc, char** argv) {
       JS_fillText(text[i], (WIDTH - JS_measureTextWidth(text[i])) / 2, (y + i * y_step) / 2);
   }
 
-  int length;
+  size_t length;
   char* name = NULL;
-  uint8_t *file = JS_openFilePicker(&length, &name);
+  uint8_t *file = JS_openFilePicker(&name, &length, ".sfc,.smc");
   // close currently loaded rom (saves battery)
   closeRom();
   // load new rom

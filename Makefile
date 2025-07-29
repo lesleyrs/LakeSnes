@@ -1,4 +1,4 @@
-CC = clang --target=wasm32 --sysroot=../../wasmlite/libc -nodefaultlibs
+CC = clang --target=wasm32 --sysroot=../../wasmlite/libc -nodefaultlibs -fno-builtin
 CFLAGS = -I ./snes -std=c99 -Wall # -Wextra -Wpedantic
 ifeq ($(DEBUG),0)
 CFLAGS += -Oz -ffast-math -flto
