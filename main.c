@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
 //   }
   // glb.audioBuffer = malloc(glb.audioFrequency / 50 * 4); // *2 for stereo, *2 for sizeof(int16)
 //   SDL_PauseAudioDevice(glb.audioDevice, 0);
-  JS_createCanvas(WIDTH, HEIGHT);
+  JS_createCanvas(WIDTH, HEIGHT, "2d");
   JS_setTitle("LakeSnes");
   JS_addKeyEventListener(NULL, onkey);
 
